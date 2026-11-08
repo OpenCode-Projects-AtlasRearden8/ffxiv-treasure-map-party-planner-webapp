@@ -1,0 +1,13 @@
+{
+  "name": "ffxiv-treasure-map-party-planner-webapp",
+  "version": "1.0.0",
+  "description": "Offline FFXIV treasure map party planner: map log, loot needs (Gil/Kindred), roll ledger, loot-split ladder, ward zone picker, and typed-in house rules. Static HTML/JS, local storage.",
+  "license": "MIT",
+  "author": "Asdale Dynamics, LLC",
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/"
+  }
+}

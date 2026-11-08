@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FFXIV Treasure Map Party Planner</title>
+  <meta name="description" content="Offline planner for FFXIV treasure map hunts: map log, loot needs, roll ledger, loot-split ladder, ward zone picker, and typed-in house rules. Local storage only." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>FFXIV Treasure Map Party Planner</h1>
+    <p class="tagline">Offline helper for map hunts &mdash; no account, everything stays in your browser.</p>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab-btn active" data-tab="party">Party</button>
+      <button class="tab-btn" data-tab="maps">Map Log</button>
+      <button class="tab-btn" data-tab="rolls">Rolls &amp; Tipping</button>
+      <button class="tab-btn" data-tab="ladder">Loot-Split Ladder</button>
+      <button class="tab-btn" data-tab="wards">Ward Zones</button>
+      <button class="tab-btn" data-tab="rules">House Rules</button>
+      <button class="tab-btn" data-tab="data">Data</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-party" class="tab-panel active" aria-label="Party">
+      <h2>Party &amp; loot needs</h2>
+      <p>Add everyone in the party and what each person is hunting: <strong>Gil</strong> (selling loot flat out), <strong>Kindred</strong> (keeping items, e.g. glamour, Orchestrion rolls, furnishings), or <strong>Either</strong> (flexible). The app splits needs so you can wave off pass rules cleanly.</p>
+      <form id="party-form">
+        <label for="member-name">Player name</label>
+        <input id="member-name" type="text" placeholder="e.g. Raya the Platemail" />
+        <label for="member-need">Loot need</label>
+        <select id="member-need">
+          <option>Either / flexible</option>
+          <option>Gil hunter</option>
+          <option>Kindred hunter</option>
+        </select>
+        <button type="button" id="add-member">Add to party</button>
+      </form>
+      <div id="party-table" class="card"></div>
+      <div id="needs-summary" class="card" aria-live="polite"></div>
+    </section>
+
+    <section id="tab-maps" class="tab-panel" aria-label="Map log">
+      <h2>Map log</h2>
+      <p>Log maps as the party finds them. Nothing is scraped &mdash; you type what you found.</p>
+      <form id="maps-form">
+        <label for="map-tier">Map tier</label>
+        <select id="map-tier"></select>
+        <p class="muted" id="map-tier-hint"></p>
+        <label for="map-zone">Zone (optional)</label>
+        <input id="map-zone" type="text" placeholder="e.g. Upper La Noscea" />
+        <label for="map-found-by">Found by (optional)</label>
+        <input id="map-found-by" type="text" placeholder="e.g. Raya" />
+        <button type="button" id="add-map">Log map</button>
+      </form>
+      <div id="maps-table" class="card"></div>
+    </section>
+
+    <section id="tab-rolls" class="tab-panel" aria-label="Rolls and tipping">
+      <h2>Roll ledger</h2>
+      <p>Log each contested roll (e.g. <code>/random</code> results) for an item, then mark which roll <strong>tipped</strong> (won) the item. The ladder and &ldquo;what tipped&rdquo; history build automatically.</p>
+      <form id="rolls-form">
+        <label for="roll-item">Item being rolled for</label>
+        <input id="roll-item" type="text" placeholder="e.g. Ophiotauroskin Glamour Set" />
+        <label for="roll-caster">Who rolled</label>
+        <select id="roll-caster"><option value="">Choose player...</option></select>
+        <label for="roll-value">Roll value</label>
+        <input id="roll-value" type="number" min="0" max="99999" placeholder="e.g. 842" />
+        <button type="button" id="add-roll">Log roll</button>
+      </form>
+      <div id="rules-reminder-rolls" class="card reminder"></div>
+      <div id="rolls-table" class="card"></div>
+    </section>
+
+    <section id="tab-ladder" class="tab-panel" aria-label="Loot-split ladder">
+      <h2>Loot-split ladder</h2>
+      <p>Your fair-loot priority ladder, computed live from the roll ledger: fewest tipped wins first, alphabetical as a tiebreak. Top of the ladder goes first on the next contested drop.</p>
+      <div id="ladder-list" class="card" aria-live="polite"></div>
+      <p class="muted">Want a different ladder order? That is a house rule &mdash; add it on the House Rules tab so the party agrees before the next portal.</p>
+    </section>
+
+    <section id="tab-wards" class="tab-panel" aria-label="Ward zones">
+      <h2>Ward zone picker</h2>
+      <p>Tick who is around, set the number of ward zones to assign, and the app deals pick order in a clean serpentine rotation (first player, last player, back up), so nobody hoards the good zones and nobody gets skipped.</p>
+      <form id="ward-form">
+        <div id="ward-members" class="card"></div>
+        <label for="ward-count">Number of ward zones / pick slots</label>
+        <input id="ward-count" type="number" min="1" max="99" value="8" />
+        <button type="button" id="ward-generate">Deal pick slots</button>
+      </form>
+      <div id="ward-result" class="card" aria-live="polite"></div>
+    </section>
+
+    <section id="tab-rules" class="tab-panel" aria-label="House rules">
+      <h2>House rules</h2>
+      <p>The fun extra: players type in their own party rules (the app honors them). Active rules are shown as reminders on the Rolls tab. Uncheck or remove rules the party voted down.</p>
+      <form id="rules-form">
+        <label for="rule-text">Rule text</label>
+        <input id="rule-text" type="text" placeholder="Your rule in one sentence (at least 6 characters)" />
+        <button type="button" id="rule-idea">Suggest a silly rule</button>
+        <button type="button" id="add-rule">Add rule</button>
+      </form>
+      <div id="rules-list" class="card"></div>
+    </section>
+
+    <section id="tab-data" class="tab-panel" aria-label="Data">
+      <h2>Data (local only)</h2>
+      <p>Everything is stored in this browser only. Export your JSON before switching devices or browsers; import it back later. Nothing is ever sent anywhere.</p>
+      <textarea id="io-area" rows="10" placeholder="Your JSON export appears here - copy it somewhere safe, or paste one back in to import."></textarea>
+      <div class="button-row">
+        <button type="button" id="export-btn">Export to box above</button>
+        <button type="button" id="import-btn">Import JSON from box above</button>
+        <button type="button" id="clear-btn" class="danger">Clear saved data</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>FFXIV Treasure Map Party Planner &mdash; an Asdale Dynamics, LLC tool. Unofficial, unaffiliated with Square Enix; FFXIV is their property. Data stays in your browser.</p>
+    <p><a href="https://dylanasdale.github.io" rel="noopener noreferrer">dylanasdale.github.io</a> &mdash; AI explained like a friend would.</p>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

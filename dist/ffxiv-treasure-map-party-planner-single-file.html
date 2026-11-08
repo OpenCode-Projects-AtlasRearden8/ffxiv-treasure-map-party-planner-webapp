@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FFXIV Treasure Map Party Planner</title>
+  <meta name="description" content="Offline planner for FFXIV treasure map hunts: map log, loot needs, roll ledger, loot-split ladder, ward zone picker, and typed-in house rules. Local storage only." />
+  <style>
+:root {
+  --bg: #14171c;
+  --panel: #1e232b;
+  --panel-alt: #262c36;
+  --text: #e8e6e1;
+  --muted: #9aa3b0;
+  --accent: #e3b23c;
+  --accent-dark: #b98d24;
+  --danger: #c96a5e;
+  --line: #313a47;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+header {
+  padding: 1.25rem 1rem 0;
+  max-width: 60rem;
+  margin: 0 auto;
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.6rem;
+  color: var(--accent);
+}
+
+.tagline {
+  margin: 0 0 0.9rem;
+  color: var(--muted);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tab-btn {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.tab-btn:hover {
+  background: var(--panel-alt);
+}
+
+.tab-btn.active {
+  background: var(--panel-alt);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+main {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
+}
+
+.tab-panel {
+  display: none;
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
+  padding: 1.1rem 1.2rem;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+h2 {
+  margin-top: 0;
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+h3 {
+  margin: 0.2rem 0 0.6rem;
+  font-size: 1.05rem;
+  color: var(--muted);
+}
+
+form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+label {
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+textarea {
+  resize: vertical;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+button {
+  background: var(--accent);
+  color: #201a08;
+  border: none;
+  border-radius: 0.35rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: fit-content;
+}
+
+button:hover {
+  background: var(--accent-dark);
+}
+
+button.small {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+button.danger {
+  background: var(--danger);
+  color: #2b120e;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 0.9rem;
+  margin-top: 0.7rem;
+  overflow-x: auto;
+}
+
+.reminder {
+  border-left: 4px solid var(--accent);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.92rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.4rem 0.55rem;
+  border-bottom: 1px solid var(--line);
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+ol,
+ul {
+  margin: 0.2rem 0;
+  padding-left: 1.4rem;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.chk {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text);
+}
+
+.button-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+
+code {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.3rem;
+}
+
+footer {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+footer a {
+  color: var(--accent);
+}
+
+</style>
+</head>
+<body>
+  <header>
+    <h1>FFXIV Treasure Map Party Planner</h1>
+    <p class="tagline">Offline helper for map hunts &mdash; no account, everything stays in your browser.</p>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab-btn active" data-tab="party">Party</button>
+      <button class="tab-btn" data-tab="maps">Map Log</button>
+      <button class="tab-btn" data-tab="rolls">Rolls &amp; Tipping</button>
+      <button class="tab-btn" data-tab="ladder">Loot-Split Ladder</button>
+      <button class="tab-btn" data-tab="wards">Ward Zones</button>
+      <button class="tab-btn" data-tab="rules">House Rules</button>
+      <button class="tab-btn" data-tab="data">Data</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-party" class="tab-panel active" aria-label="Party">
+      <h2>Party &amp; loot needs</h2>
+      <p>Add everyone in the party and what each person is hunting: <strong>Gil</strong> (selling loot flat out), <strong>Kindred</strong> (keeping items, e.g. glamour, Orchestrion rolls, furnishings), or <strong>Either</strong> (flexible). The app splits needs so you can wave off pass rules cleanly.</p>
+      <form id="party-form">
+        <label for="member-name">Player name</label>
+        <input id="member-name" type="text" placeholder="e.g. Raya the Platemail" />
+        <label for="member-need">Loot need</label>
+        <select id="member-need">
+          <option>Either / flexible</option>
+          <option>Gil hunter</option>
+          <option>Kindred hunter</option>
+        </select>
+        <button type="button" id="add-member">Add to party</button>
+      </form>
+      <div id="party-table" class="card"></div>
+      <div id="needs-summary" class="card" aria-live="polite"></div>
+    </section>
+
+    <section id="tab-maps" class="tab-panel" aria-label="Map log">
+      <h2>Map log</h2>
+      <p>Log maps as the party finds them. Nothing is scraped &mdash; you type what you found.</p>
+      <form id="maps-form">
+        <label for="map-tier">Map tier</label>
+        <select id="map-tier"></select>
+        <p class="muted" id="map-tier-hint"></p>
+        <label for="map-zone">Zone (optional)</label>
+        <input id="map-zone" type="text" placeholder="e.g. Upper La Noscea" />
+        <label for="map-found-by">Found by (optional)</label>
+        <input id="map-found-by" type="text" placeholder="e.g. Raya" />
+        <button type="button" id="add-map">Log map</button>
+      </form>
+      <div id="maps-table" class="card"></div>
+    </section>
+
+    <section id="tab-rolls" class="tab-panel" aria-label="Rolls and tipping">
+      <h2>Roll ledger</h2>
+      <p>Log each contested roll (e.g. <code>/random</code> results) for an item, then mark which roll <strong>tipped</strong> (won) the item. The ladder and &ldquo;what tipped&rdquo; history build automatically.</p>
+      <form id="rolls-form">
+        <label for="roll-item">Item being rolled for</label>
+        <input id="roll-item" type="text" placeholder="e.g. Ophiotauroskin Glamour Set" />
+        <label for="roll-caster">Who rolled</label>
+        <select id="roll-caster"><option value="">Choose player...</option></select>
+        <label for="roll-value">Roll value</label>
+        <input id="roll-value" type="number" min="0" max="99999" placeholder="e.g. 842" />
+        <button type="button" id="add-roll">Log roll</button>
+      </form>
+      <div id="rules-reminder-rolls" class="card reminder"></div>
+      <div id="rolls-table" class="card"></div>
+    </section>
+
+    <section id="tab-ladder" class="tab-panel" aria-label="Loot-split ladder">
+      <h2>Loot-split ladder</h2>
+      <p>Your fair-loot priority ladder, computed live from the roll ledger: fewest tipped wins first, alphabetical as a tiebreak. Top of the ladder goes first on the next contested drop.</p>
+      <div id="ladder-list" class="card" aria-live="polite"></div>
+      <p class="muted">Want a different ladder order? That is a house rule &mdash; add it on the House Rules tab so the party agrees before the next portal.</p>
+    </section>
+
+    <section id="tab-wards" class="tab-panel" aria-label="Ward zones">
+      <h2>Ward zone picker</h2>
+      <p>Tick who is around, set the number of ward zones to assign, and the app deals pick order in a clean serpentine rotation (first player, last player, back up), so nobody hoards the good zones and nobody gets skipped.</p>
+      <form id="ward-form">
+        <div id="ward-members" class="card"></div>
+        <label for="ward-count">Number of ward zones / pick slots</label>
+        <input id="ward-count" type="number" min="1" max="99" value="8" />
+        <button type="button" id="ward-generate">Deal pick slots</button>
+      </form>
+      <div id="ward-result" class="card" aria-live="polite"></div>
+    </section>
+
+    <section id="tab-rules" class="tab-panel" aria-label="House rules">
+      <h2>House rules</h2>
+      <p>The fun extra: players type in their own party rules (the app honors them). Active rules are shown as reminders on the Rolls tab. Uncheck or remove rules the party voted down.</p>
+      <form id="rules-form">
+        <label for="rule-text">Rule text</label>
+        <input id="rule-text" type="text" placeholder="Your rule in one sentence (at least 6 characters)" />
+        <button type="button" id="rule-idea">Suggest a silly rule</button>
+        <button type="button" id="add-rule">Add rule</button>
+      </form>
+      <div id="rules-list" class="card"></div>
+    </section>
+
+    <section id="tab-data" class="tab-panel" aria-label="Data">
+      <h2>Data (local only)</h2>
+      <p>Everything is stored in this browser only. Export your JSON before switching devices or browsers; import it back later. Nothing is ever sent anywhere.</p>
+      <textarea id="io-area" rows="10" placeholder="Your JSON export appears here - copy it somewhere safe, or paste one back in to import."></textarea>
+      <div class="button-row">
+        <button type="button" id="export-btn">Export to box above</button>
+        <button type="button" id="import-btn">Import JSON from box above</button>
+        <button type="button" id="clear-btn" class="danger">Clear saved data</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>FFXIV Treasure Map Party Planner &mdash; an Asdale Dynamics, LLC tool. Unofficial, unaffiliated with Square Enix; FFXIV is their property. Data stays in your browser.</p>
+    <p><a href="https://dylanasdale.github.io" rel="noopener noreferrer">dylanasdale.github.io</a> &mdash; AI explained like a friend would.</p>
+  </footer>
+
+  <script>
+const STORAGE_KEY = "ffxiv-tmpp.v1";
+
+const NEEDS = ["gil", "kindred", "either"];
+const NEED_LABELS = { "Gil hunter": "gil", "Kindred hunter": "kindred", "Either / flexible": "either" };
+
+const NEED_LABELS_REVERSE = { gil: "Gil hunter", kindred: "Kindred hunter", either: "Either / flexible" };
+
+function defaultState() {
+  return {
+    version: 1,
+    members: [],
+    maps: [],
+    rolls: [],
+    rules: [],
+    ward: { candidateCount: 8, picksPerMember: null, result: [] },
+  };
+}
+
+function makeId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return "id-" + Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
+}
+
+function isValidId(value) {
+  return typeof value === "string" && value.length > 0;
+}
+
+function validNeed(value) {
+  if (typeof value !== "string") return "either";
+  if (NEEDS.includes(value)) return value;
+  return NEED_LABELS[value] || "either";
+}
+
+function normalizeMember(raw, ids) {
+  if (!raw || typeof raw !== "object") return null;
+  const name = typeof raw.name === "string" ? raw.name.trim() : "";
+  if (!name) return null;
+  return {
+    id: isValidId(raw.id) ? raw.id : makeId(),
+    name,
+    need: validNeed(raw.need),
+  };
+}
+
+function normalizeMap(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const tier = typeof raw.tier === "string" ? raw.tier.trim() : "";
+  return {
+    id: isValidId(raw.id) ? raw.id : makeId(),
+    tier: tier || "Unknown",
+    zone: typeof raw.zone === "string" ? raw.zone.trim() : "",
+    found: typeof raw.found === "string" && raw.found ? raw.found : "",
+    opened: Boolean(raw.opened),
+    notes: typeof raw.notes === "string" ? raw.notes : "",
+  };
+}
+
+function normalizeRoll(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const item = typeof raw.item === "string" ? raw.item.trim() : "";
+  const caster = typeof raw.caster === "string" ? raw.caster.trim() : "";
+  const value = Number(raw.value);
+  return {
+    id: isValidId(raw.id) ? raw.id : makeId(),
+    mapId: isValidId(raw.mapId) ? raw.mapId : null,
+    item: item || "Uncontested item",
+    caster,
+    value: Number.isFinite(value) ? value : 0,
+    tippedBy: isValidId(raw.tippedBy) ? raw.tippedBy : null,
+    notes: typeof raw.notes === "string" ? raw.notes : "",
+  };
+}
+
+function normalizeRule(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const text = typeof raw.text === "string" ? raw.text.trim() : "";
+  if (!text) return null;
+  return {
+    id: isValidId(raw.id) ? raw.id : makeId(),
+    text,
+    active: raw.active !== false,
+  };
+}
+
+function normalizeWard(raw) {
+  if (!raw || typeof raw !== "object") return defaultState().ward;
+  const candidateCount = Number(raw.candidateCount);
+  const result = Array.isArray(raw.result)
+    ? raw.result.filter((s) => s && isValidId(s.member)).map((s) => ({
+        slot: Number.isFinite(Number(s.slot)) ? Number(s.slot) : 0,
+        member: s.member,
+      }))
+    : [];
+  return {
+    candidateCount: Number.isFinite(candidateCount) ? Math.max(1, Math.floor(candidateCount)) : 8,
+    picksPerMember: raw.picksPerMember == null ? null : Number(raw.picksPerMember) || null,
+    result,
+  };
+}
+
+function normalizeState(raw) {
+  const base = defaultState();
+  if (!raw || typeof raw !== "object") return base;
+  return {
+    version: 1,
+    members: Array.isArray(raw.members)
+      ? raw.members.map((m) => normalizeMember(m)).filter(Boolean)
+      : [],
+    maps: Array.isArray(raw.maps) ? raw.maps.map(normalizeMap).filter(Boolean) : [],
+    rolls: Array.isArray(raw.rolls) ? raw.rolls.map(normalizeRoll).filter(Boolean) : [],
+    rules: Array.isArray(raw.rules) ? raw.rules.map(normalizeRule).filter(Boolean) : [],
+    ward: normalizeWard(raw.ward),
+  };
+}
+
+function safeStorage() {
+  try {
+    if (typeof localStorage !== "undefined" && localStorage) return localStorage;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function loadState() {
+  const store = safeStorage();
+  if (!store) return defaultState();
+  try {
+    const raw = JSON.parse(store.getItem(STORAGE_KEY) || "null");
+    return normalizeState(raw);
+  } catch {
+    return defaultState();
+  }
+}
+
+function saveState(state) {
+  const store = safeStorage();
+  if (!store) return false;
+  try {
+    store.setItem(STORAGE_KEY, JSON.stringify(normalizeState(state)));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function clearState() {
+  const store = safeStorage();
+  if (!store) return;
+  try {
+    store.removeItem(STORAGE_KEY);
+  } catch {
+    return;
+  }
+}
+
+function importState(jsonText) {
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    return { ok: false, error: "That does not look like a JSON export." };
+  }
+  return { ok: true, state: normalizeState(parsed) };
+}
+
+function exportState(state) {
+  return JSON.stringify(normalizeState(state), null, 2);
+}
+
+
+const TARMAP_TIERS = [
+  "Timeworn Leather Map",
+  "Timeworn Brass Map",
+  "Timeworn Goatskin Map",
+  "Timeworn Toadskin Map",
+  "Timeworn Boarskin Map",
+  "Timeworn Peiste Map",
+  "Timeworn Archaeosian Map",
+  "Timeworn Wyvernskin Map",
+  "Timeworn Dragonskin Map",
+  "Timeworn Gazelleskin Map",
+  "Timeworn Skybuilders' Map",
+  "Timeworn Zonureskin Map",
+  "Timeworn Kumbhiraskin Map",
+  "Timeworn Ophiotauroskin Map",
+];
+
+const ERAS = [
+  {
+    era: "A Realm Reborn zones",
+    re: /^Timeworn (Leather|Brass|Goatskin|Toadskin|Boarskin|Peiste) Map$/,
+  },
+  {
+    era: "Heavensward zones",
+    re: /^Timeworn (Archaeosian|Wyvernskin|Dragonskin) Map$/,
+  },
+  {
+    era: "Stormblood zones",
+    re: /^Timeworn Gazelleskin Map$/,
+  },
+  {
+    era: "Shadowbringers zones",
+    re: /^Timeworn Skybuilders' Map$/,
+  },
+  {
+    era: "Endwalker zones",
+    re: /^Timeworn Zonureskin Map$/,
+  },
+  {
+    era: "Dawntrail zones",
+    re: /^Timeworn (Kumbhiraskin|Ophiotauroskin) Map$/,
+  },
+];
+
+function classifyZones(tier) {
+  const hit = ERAS.find((e) => e.re.test(tier));
+  return hit ? hit.era : "Custom / other";
+}
+
+
+const RULE_PROMPTS = [
+  "Winner of a portal pendant passes their pendant to the player who whispered the nicest compliment.",
+  "If the loot is one of the Kindred glamour pieces, the ladder pauses and dice decide.",
+  "Nobody complains about the chest shuffle unless they rolled above 7,000.",
+  "Gil-only loot goes to the party vault until everyone has one portal per week.",
+  "If someone rolled and instantly left, their rolls are retroactively sealed and re-run.",
+  "Whoever typed the map into chat first picks the first ward zone.",
+  "The party pays taxes in peiste meat. No exceptions.",
+  "Sassy Rule: the person who tipped lowest must announce the next map tier using only the echo voice.",
+];
+
+function ruleReminder(rules) {
+  const active = rules.filter((r) => r.active && r.text);
+  return active.map((r) => `House rule: ${r.text}`);
+}
+
+function validateRule(text) {
+  if (!text || typeof text !== "string") return { ok: false, error: "Rule text is required." };
+  const t = text.trim();
+  if (t.length < 6) return { ok: false, error: "Rules need at least 6 characters so people know what they signed up for." };
+  if (t.length > 280) return { ok: false, error: "Keep rules under 280 characters - house rules, not law books." };
+  return { ok: true, text: t };
+}
+
+
+function realId(x) {
+  return x !== null && x !== undefined && String(x).trim() !== "";
+}
+
+function dealSerpentine(memberIds, totalSlots) {
+  const ids = memberIds.filter(realId);
+  const n = ids.length;
+  if (!n) return [];
+  const total = Math.max(0, Math.floor(Number(totalSlots) || 0));
+  const slots = [];
+  for (let s = 0; s < total; s++) {
+    const row = Math.floor(s / n);
+    const col = s % n;
+    const idx = row % 2 === 0 ? col : n - 1 - col;
+    slots.push({ slot: s + 1, memberId: ids[idx] });
+  }
+  return slots;
+}
+
+function shuffleOrder(ids, rng = Math.random) {
+  const out = ids.filter(realId);
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+function describeSerpentine(memberNames, totalSlots) {
+  const ids = memberNames.map((_, i) => i);
+  return dealSerpentine(ids, totalSlots).map(
+    (s) => `Zone ${s.slot}: ${memberNames[s.memberId]}`
+  );
+}
+
+
+function needsSummary(members) {
+  const summary = { gil: [], kindred: [], either: [] };
+  for (const m of members) {
+    summary[m.need].push(m.name);
+  }
+  return summary;
+}
+
+function winsByMember(members, rolls) {
+  const counts = {};
+  for (const m of members) counts[m.id] = { wins: 0, biggestTip: null };
+  for (const r of rolls) {
+    if (!r.tippedBy || !(r.caster in counts)) continue;
+    counts[r.caster].wins += 1;
+    const v = Number(r.value) || 0;
+    if (counts[r.caster].biggestTip === null || v > counts[r.caster].biggestTip) {
+      counts[r.caster].biggestTip = v;
+    }
+  }
+  return counts;
+}
+
+function buildLadder(members, rolls) {
+  const counts = winsByMember(members, rolls);
+  return members
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      need: m.need,
+      wins: counts[m.id]?.wins ?? 0,
+      biggestTip: counts[m.id]?.biggestTip ?? null,
+    }))
+    .sort((a, b) => a.wins - b.wins || a.name.localeCompare(b.name))
+    .map((entry, i) => ({ ...entry, priority: i + 1 }));
+}
+
+function tipWinner(rolls, rollId) {
+  const roll = rolls.find((r) => r.id === rollId);
+  if (!roll) return { ok: false, error: "Roll not found." };
+  if (!roll.caster) return { ok: false, error: "Log who cast the roll first." };
+  const sameItem = (r) =>
+    r.id !== rollId && !r.tippedBy && r.item.trim().toLowerCase() === roll.item.trim().toLowerCase();
+  const higher = rolls.find((r) => sameItem(r) && Number(r.value) > Number(roll.value));
+  if (higher) {
+    return {
+      ok: false,
+      error: `A higher untipped roll for that item exists (${higher.value} by ${higher.caster}).`,
+    };
+  }
+  return { ok: true, rolls: rolls.map((r) => (r.id === rollId ? { ...r, tippedBy: r.id } : r)) };
+}
+
+function untipRoll(rolls, rollId) {
+  return rolls.map((r) => (r.id === rollId ? { ...r, tippedBy: null } : r));
+}
+
+
+
+const $ = (id) => document.getElementById(id);
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+  );
+}
+
+let state = defaultState();
+
+function persist() {
+  if (!saveState(state)) {
+    console.warn("Local storage unavailable — this session's data will not survive a reload.");
+  }
+}
+
+function needLabel(v) {
+  return NEED_LABELS_REVERSE[v] || v;
+}
+
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+    btn.classList.add("active");
+    $("tab-" + btn.dataset.tab).classList.add("active");
+    renderAll();
+  });
+});
+
+document.getElementById("map-tier").addEventListener("change", (e) => {
+  $("map-tier-hint").textContent = classifyZones(e.target.value);
+});
+
+$("add-member").addEventListener("click", () => {
+  const name = $("member-name").value.trim();
+  if (!name) return;
+  if (state.members.some((m) => m.name.toLowerCase() === name.toLowerCase())) {
+    alert("That player is already in the party list.");
+    return;
+  }
+  state.members = [
+    ...state.members,
+    {
+      id: crypto.randomUUID(),
+      name,
+      need: $("member-need").value === "Gil hunter" ? "gil" : $("member-need").value === "Kindred hunter" ? "kindred" : "either",
+    },
+  ];
+  $("member-name").value = "";
+  persist();
+  renderAll();
+});
+
+function renderParty() {
+  const rows = state.members.map(
+    (m) =>
+      `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(needLabel(m.need))}</td><td><button class="small" data-del-member="${m.id}">Remove</button></td></tr>`
+  ).join("");
+  $("party-table").innerHTML = rows
+    ? `<table><thead><tr><th>Player</th><th>Loot need</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+    : `<p class="muted">No party members yet. This stays on your device only.</p>`;
+
+  const sum = needsSummary(state.members);
+  $("needs-summary").innerHTML =
+    `<h3>Loot needs split</h3><p><strong>Gil hunters (${sum.gil.length}):</strong> ${escapeHtml(sum.gil.join(" | ") || "none yet")}</p>` +
+    `<p><strong>Kindred hunters (${sum.kindred.length}):</strong> ${escapeHtml(sum.kindred.join(" | ") || "none yet")}</p>` +
+    `<p><strong>Flexible (${sum.either.length}):</strong> ${escapeHtml(sum.either.join(" | ") || "none yet")}</p>`;
+}
+
+document.addEventListener("click", (e) => {
+  const mid = e.target.closest && e.target.closest("[data-del-member]");
+  if (mid) {
+    state.members = state.members.filter((m) => m.id !== mid.dataset.delMember);
+    persist();
+    renderAll();
+  }
+});
+
+$("add-map").addEventListener("click", () => {
+  const tier = $("map-tier").value;
+  if (!tier) return;
+  state.maps = [
+    ...state.maps,
+    {
+      id: crypto.randomUUID(),
+      tier,
+      zone: $("map-zone").value.trim(),
+      foundBy: $("map-found-by").value.trim(),
+      foundAt: new Date().toISOString(),
+      opened: false,
+      notes: "",
+    },
+  ];
+  $("map-zone").value = "";
+  $("map-found-by").value = "";
+  persist();
+  renderAll();
+});
+
+function renderMaps() {
+  const rows = state.maps
+    .map((m) => {
+      return `<tr><td>${escapeHtml(m.tier)}</td><td>${escapeHtml(m.zone || "unknown")}</td><td>${escapeHtml(m.foundBy || "party")}</td><td>${new Date(m.foundAt).toLocaleDateString()} ${new Date(m.foundAt).toLocaleTimeString()}</td><td>${m.opened ? "Opened (portal)" : "Unopened"}</td><td><button class="small" data-open-map="${m.id}">${m.opened ? "Mark unopened" : "Mark opened"}</button> <button class="small" data-del-map="${m.id}">Remove</button></td></tr>`;
+    })
+    .join("");
+  $("maps-table").innerHTML = rows
+    ? `<table><thead><tr><th>Tier</th><th>Zone</th><th>Found by</th><th>When</th><th>Portal status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+    : `<p class="muted">No maps logged yet.</p>`;
+}
+
+document.addEventListener("click", (e) => {
+  const open = e.target.closest && e.target.closest("[data-open-map]");
+  if (open) {
+    const map = state.maps.find((m) => m.id === open.dataset.openMap);
+    if (map) {
+      map.opened = !map.opened;
+      persist();
+      renderAll();
+    }
+  }
+  const del = e.target.closest && e.target.closest("[data-del-map]");
+  if (del) {
+    state.maps = state.maps.filter((m) => m.id !== del.dataset.delMap);
+    persist();
+    renderAll();
+  }
+});
+
+function memberOptions(selected) {
+  return state.members.map((m) => `<option value="${m.id}" ${selected === m.id ? "selected" : ""}>${escapeHtml(m.name)}</option>`).join("");
+}
+
+function renderRolls() {
+  const sel = $("roll-caster");
+  const cur = sel.value;
+  sel.innerHTML =
+    `<option value="">Choose player...</option>` + memberOptions(cur);
+  const byId = {};
+  state.members.forEach((m) => (byId[m.id] = m.name));
+  const rows = state.rolls
+    .map(
+      (r) =>
+        `<tr><td>${escapeHtml(r.item)}</td><td>${escapeHtml(byId[r.caster] || r.caster)}</td><td>${r.value}</td><td>${r.tippedBy ? "Tipped &mdash; this roll won" : "Not tipped yet"}</td><td>${r.tippedBy ? `<button class="small" data-untip="${r.id}">Clear tip</button>` : `<button class="small" data-tip="${r.id}">This roll tipped</button>`}</td></tr>`
+    )
+    .join("");
+  $("rolls-table").innerHTML = rows
+    ? `<table><thead><tr><th>Item</th><th>Player</th><th>Roll</th><th>Result</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+    : `<p class="muted">No rolls in the ledger yet.</p>`;
+}
+
+$("add-roll").addEventListener("click", () => {
+  const caster = $("roll-caster").value;
+  const value = Number($("roll-value").value);
+  const item = $("roll-item").value.trim();
+  if (!caster) {
+    alert("Choose which player rolled.");
+    return;
+  }
+  if (!Number.isFinite(value) || value <= 0) {
+    alert("Enter the roll value (like the /random result).");
+    return;
+  }
+  if (!item) {
+    alert("Type what item this roll is for.");
+    return;
+  }
+  state.rolls = [...state.rolls, { id: crypto.randomUUID(), item, caster, value: Math.floor(value), tippedBy: null, notes: "" }];
+  $("roll-value").value = "";
+  persist();
+  renderAll();
+});
+
+document.addEventListener("click", (e) => {
+  const tip = e.target.closest && e.target.closest("[data-tip]");
+  if (tip) {
+    const res = tipWinner(state.rolls, tip.dataset.tip);
+    if (!res.ok) {
+      alert(res.error);
+      return;
+    }
+    state.rolls = res.rolls;
+    persist();
+    renderAll();
+  }
+  const untip = e.target.closest && e.target.closest("[data-untip]");
+  if (untip) {
+    state.rolls = untipRoll(state.rolls, untip.dataset.untip);
+    persist();
+    renderAll();
+  }
+});
+
+function renderLadder() {
+  const ladder = buildLadder(state.members, state.rolls);
+  const rows = ladder
+    .map(
+      (l, i) =>
+        `<li><strong>${i + 1}.</strong> ${escapeHtml(l.name)} &mdash; ${l.wins} tipped ${l.wins === 1 ? "win" : "wins"}${l.biggestTip !== null ? `, best roll ${l.biggestTip}` : ""} <span class="muted">(${escapeHtml(needLabel(l.need))})</span></li>`
+    )
+    .join("");
+  $("ladder-list").innerHTML = ladder.length
+    ? `<ul>${rows}</ul><p class="muted">Fewest wins first: the player at the top gets first pick on the next contested item. After winning, they drift to the bottom naturally as others catch up.</p>`
+    : `<p class="muted">The ladder builds itself once you have party members and tips logged.</p>`;
+}
+
+const wardPicked = new Set();
+
+function renderWards() {
+  const checkboxes = state.members
+    .map(
+      (m) =>
+        `<label class="chk"><input type="checkbox" class="ward-member" value="${m.id}" ${wardPicked.has(m.id) ? "checked" : ""}> ${escapeHtml(m.name)}</label>`
+    )
+    .join("");
+  $("ward-members").innerHTML = checkboxes || `<p class="muted">Add party members on the Party tab first.</p>`;
+  $("ward-result").innerHTML = state.ward.result.length
+    ? `<ol>${state.ward.result
+        .map((s) => `<li>Pick ${s.slot}: ${escapeHtml(byName(s.memberId))}</li>`)
+        .join("")}</ol><p class="muted">Serpentine order: back and forth so early zones alternate between the head and tail of the party list.</p>`
+    : "<p class=\"muted\">Tick players, set the number of zones, then deal.</p>";
+}
+
+function byName(id) {
+  const m = state.members.find((x) => x.id === id);
+  return m ? m.name : "(left the party)";
+}
+
+$("ward-generate").addEventListener("click", () => {
+  const picked = [...document.querySelectorAll(".ward-member:checked")].map((el) => el.value);
+  const count = Math.max(0, Math.floor(Number($("ward-count").value) || 0));
+  if (picked.length < 2) {
+    alert("Tick at least two party members.");
+    return;
+  }
+  if (count < 1) {
+    alert("How many ward zones should be dealt?");
+    return;
+  }
+  const result = dealSerpentine(picked, count).map(({ slot, memberId }) => ({ slot, memberId }));
+  state.ward = { ...state.ward, result };
+  persist();
+  renderWards();
+  $("ward-result").innerHTML = result.length
+    ? `<ol>${result
+        .map((s) => `<li>Pick ${s.slot}: ${escapeHtml(byName(s.memberId))}</li>`)
+        .join("")}</ol><p class="muted">Serpentine order: back and forth so early zones alternate between the head and tail of the party list.</p>`
+    : "";
+});
+
+document.addEventListener("change", (e) => {
+  const el = e.target.closest && e.target.closest(".ward-member");
+  if (el) {
+    if (el.checked) wardPicked.add(el.value);
+    else wardPicked.delete(el.value);
+  }
+});
+
+$("rule-idea").addEventListener("click", () => {
+  const el = $("rule-text");
+  el.value = RULE_PROMPTS[Math.floor(Math.random() * RULE_PROMPTS.length)] ?? "";
+});
+
+$("add-rule").addEventListener("click", () => {
+  const check = validateRule($("rule-text").value);
+  if (!check.ok) {
+    alert(check.error);
+    return;
+  }
+  state.rules = [...state.rules, { id: crypto.randomUUID(), text: check.text, active: true }];
+  $("rule-text").value = "";
+  persist();
+  renderAll();
+});
+
+function renderRules() {
+  const rows = state.rules
+    .map(
+      (r) =>
+        `<li><label><input type="checkbox" data-rule-toggle="${r.id}" ${r.active ? "checked" : ""}></label> ${escapeHtml(r.text)} <button class="small" data-rule-del="${r.id}">Remove</button></li>`
+    )
+    .join("");
+  $("rules-list").innerHTML = rows
+    ? `<ul>${rows}</ul>`
+    : `<p class="muted">Type your party's own rules in and the app will honor them with a reminder whenever you log rolls.</p>`;
+}
+
+document.addEventListener("click", (e) => {
+  const del = e.target.closest && e.target.closest("[data-rule-del]");
+  if (del) {
+    state.rules = state.rules.filter((r) => r.id !== del.dataset.ruleDel);
+    persist();
+    renderAll();
+  }
+});
+
+document.addEventListener("change", (e) => {
+  const tog = e.target.closest && e.target.closest("[data-rule-toggle]");
+  if (tog) {
+    const rule = state.rules.find((r) => r.id === tog.dataset.ruleToggle);
+    if (rule) {
+      rule.active = tog.checked;
+      persist();
+      renderAll();
+    }
+  }
+});
+
+$("export-btn").addEventListener("click", () => {
+  $("io-area").value = exportState(state);
+});
+
+$("import-btn").addEventListener("click", () => {
+  const res = importState($("io-area").value);
+  if (!res.ok) {
+    alert(res.error);
+    return;
+  }
+  state = res.state;
+  persist();
+  renderAll();
+});
+
+$("clear-btn").addEventListener("click", () => {
+  if (!confirm("Clear all locally saved planner data? This cannot be undone.")) return;
+  clearState();
+  state = defaultState();
+  renderAll();
+});
+
+function renderAll() {
+  renderParty();
+  renderMaps();
+  renderRolls();
+  renderLadder();
+  renderWards();
+  renderRules();
+  const reminders = ruleReminder(state.rules);
+  const box = $("rules-reminder-rolls");
+  box.innerHTML = reminders.length
+    ? `<strong>Active house rules:</strong><ul>${reminders.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`
+    : `<p class="muted">No active house rules. Add some on the House Rules tab.</p>`;
+}
+
+function init() {
+  const tierSel = $("map-tier");
+  TARMAP_TIERS.forEach((t) => {
+    const opt = document.createElement("option");
+    opt.textContent = t;
+    tierSel.appendChild(opt);
+  });
+  state = loadState();
+  renderAll();
+}
+
+init();
+
+</script>
+</body>
+</html>
